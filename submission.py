@@ -71,7 +71,12 @@ def main():
         imgL_o = (skimage.io.imread(test_left_img[inx]).astype('float32'))[:,:,:3]
         imgR_o = (skimage.io.imread(test_right_img[inx]).astype('float32'))[:,:,:3]
         imgsize = imgL_o.shape[:2]
-
+        
+        idxname = test_left_img[inx].split('/')[-2]
+        if os.path.exists('%s/%s-disp.npy'% (args.outdir, idxname.split('/')[0])): 
+            print("Disparity exists, skipping", idxname)
+            continue
+        
         if args.max_disp>0:
             max_disp = int(args.max_disp)
         else:
