@@ -43,10 +43,10 @@ test_left_img, test_right_img, _, _ = DA.dataloader(args.datapath)
 # construct model
 model = hsm(128,args.clean,level=args.level)
 model = nn.DataParallel(model, device_ids=[0])
-model.cuda()
+model
 
 if args.loadmodel is not None:
-    pretrained_dict = torch.load(args.loadmodel)
+    pretrained_dict = torch.load(args.loadmodel,  map_location=torch.device('cpu'))
     pretrained_dict['state_dict'] =  {k:v for k,v in pretrained_dict['state_dict'].items() if 'disp' not in k}
     model.load_state_dict(pretrained_dict['state_dict'],strict=False)
 else:
@@ -57,8 +57,8 @@ print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in mo
 multip = 48
 imgL = np.zeros((1,3,24*multip,32*multip))
 imgR = np.zeros((1,3,24*multip,32*multip))
-imgL = Variable(torch.FloatTensor(imgL).cuda())
-imgR = Variable(torch.FloatTensor(imgR).cuda())
+imgL = Variable(torch.FloatTensor(imgL))
+imgR = Variable(torch.FloatTensor(imgR))
 with torch.no_grad():
     model.eval()
     pred_disp,entropy = model(imgL,imgR)
@@ -86,10 +86,10 @@ def main():
         else:
             model.module.maxdisp = tmpdisp
         if model.module.maxdisp ==64: model.module.maxdisp=128
-        model.module.disp_reg8 =  disparityregression(model.module.maxdisp,16).cuda()
-        model.module.disp_reg16 = disparityregression(model.module.maxdisp,16).cuda()
-        model.module.disp_reg32 = disparityregression(model.module.maxdisp,32).cuda()
-        model.module.disp_reg64 = disparityregression(model.module.maxdisp,64).cuda()
+        model.module.disp_reg8 =  disparityregression(model.module.maxdisp,16)
+        model.module.disp_reg16 = disparityregression(model.module.maxdisp,16)
+        model.module.disp_reg32 = disparityregression(model.module.maxdisp,32)
+        model.module.disp_reg64 = disparityregression(model.module.maxdisp,64)
         print(model.module.maxdisp)
         
         # resize
@@ -113,13 +113,13 @@ def main():
         imgR = np.lib.pad(imgR,((0,0),(0,0),(top_pad,0),(0,left_pad)),mode='constant',constant_values=0)
 
         # test
-        imgL = Variable(torch.FloatTensor(imgL).cuda())
-        imgR = Variable(torch.FloatTensor(imgR).cuda())
+        imgL = Variable(torch.FloatTensor(imgL))
+        imgR = Variable(torch.FloatTensor(imgR))
         with torch.no_grad():
-            torch.cuda.synchronize()
+            # torch.synchronize()
             start_time = time.time()
             pred_disp,entropy = model(imgL,imgR)
-            torch.cuda.synchronize()
+            # torch.synchronize()
             ttime = (time.time() - start_time); print('time = %.2f' % (ttime*1000) )
         pred_disp = torch.squeeze(pred_disp).data.cpu().numpy()
 
@@ -151,7 +151,7 @@ def main():
         with open('%s/%s/timeHSM.txt'%(args.outdir,idxname.split('/')[0]),'w') as f:
              f.write(str(ttime))
             
-        torch.cuda.empty_cache()
+#        torch.empty_cache()
 
 if __name__ == '__main__':
     main()
