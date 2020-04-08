@@ -9,7 +9,7 @@ import glob
 
 
 def dataloader(filepath):
-  img_list = [i.split('/')[-1] for i in glob.glob('%s/*'%filepath) if os.path.isdir(i) and "camera" in i]
+  img_list = sorted([i.split('/')[-1] for i in glob.glob('%s/*'%filepath) if os.path.isdir(i) and "camera" in i])
 
   left_train  = ['%s/%s/left.jpg'% (filepath,img) for img in img_list]  
   right_train = ['%s/%s/right.jpg'% (filepath,img) for img in img_list]
